@@ -4,19 +4,17 @@ import { db } from '../db/client'
 import { CreateFeatureSchema, UpdateFeatureSchema } from '../schemas/feature'
 import type { GeoJSONFeature, GeoJSONFeatureCollection } from '../types/geojson'
 
-// แปลง DB row เป็น GeoJSON Feature
+// แปลง DB row เป็น GeoJSON Feature — throw ถ้าข้อมูล JSON เสียหาย
 function toFeature(row: Record<string, unknown>): GeoJSONFeature {
+  const coordinates = JSON.parse(row.coordinates as string) as [number, number]
+  const extraProps = row.properties
+    ? (JSON.parse(row.properties as string) as Record<string, unknown>)
+    : {}
   return {
     id: row.id as string,
     type: 'Feature',
-    geometry: {
-      type: 'Point',
-      coordinates: JSON.parse(row.coordinates as string) as [number, number],
-    },
-    properties: {
-      name: row.name as string,
-      ...(row.properties ? (JSON.parse(row.properties as string) as Record<string, unknown>) : {}),
-    },
+    geometry: { type: 'Point', coordinates },
+    properties: { name: row.name as string, ...extraProps },
   }
 }
 
@@ -25,23 +23,36 @@ function notFound(set: { status?: number | string }) {
   return { error: 'ไม่พบสถานที่', status: 404 }
 }
 
+function serverError(set: { status?: number | string }, msg = 'เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์') {
+  set.status = 500
+  return { error: msg, status: 500 }
+}
+
 export const featuresRoutes = new Elysia({ prefix: '/api/features' })
 
   // GET /api/features
-  .get('/', () => {
-    const rows = db.query<Record<string, unknown>, []>('SELECT * FROM features ORDER BY created_at DESC').all()
-    const collection: GeoJSONFeatureCollection = {
-      type: 'FeatureCollection',
-      features: rows.map(toFeature),
+  .get('/', ({ set }) => {
+    try {
+      const rows = db.query<Record<string, unknown>, []>('SELECT * FROM features ORDER BY created_at DESC').all()
+      const features = rows.map(toFeature)
+      const collection: GeoJSONFeatureCollection = { type: 'FeatureCollection', features }
+      return collection
+    } catch (err) {
+      console.error('[features] GET / failed:', err)
+      return serverError(set)
     }
-    return collection
   })
 
   // GET /api/features/:id
   .get('/:id', ({ params, set }) => {
-    const row = db.query<Record<string, unknown>, [string]>('SELECT * FROM features WHERE id = ?').get(params.id)
-    if (!row) return notFound(set)
-    return toFeature(row)
+    try {
+      const row = db.query<Record<string, unknown>, [string]>('SELECT * FROM features WHERE id = ?').get(params.id)
+      if (!row) return notFound(set)
+      return toFeature(row)
+    } catch (err) {
+      console.error(`[features] GET /${params.id} failed:`, err)
+      return serverError(set)
+    }
   })
 
   // POST /api/features
@@ -55,20 +66,20 @@ export const featuresRoutes = new Elysia({ prefix: '/api/features' })
     const { geometry, properties } = parsed.data
     const id = randomUUID()
 
-    db.run(
-      `INSERT INTO features (id, name, geometry_type, coordinates, properties) VALUES (?, ?, ?, ?, ?)`,
-      [
-        id,
-        properties.name,
-        geometry.type,
-        JSON.stringify(geometry.coordinates),
-        null,
-      ]
-    )
+    try {
+      db.run(
+        `INSERT INTO features (id, name, geometry_type, coordinates, properties) VALUES (?, ?, ?, ?, ?)`,
+        [id, properties.name, geometry.type, JSON.stringify(geometry.coordinates), null]
+      )
+    } catch (err) {
+      console.error('[features] POST INSERT failed:', err)
+      return serverError(set)
+    }
 
     set.status = 201
     const row = db.query<Record<string, unknown>, [string]>('SELECT * FROM features WHERE id = ?').get(id)
-    return toFeature(row!)
+    if (!row) return serverError(set)
+    return toFeature(row)
   })
 
   // PUT /api/features/:id
@@ -83,23 +94,32 @@ export const featuresRoutes = new Elysia({ prefix: '/api/features' })
     }
 
     const { geometry, properties } = parsed.data
-
     const newName = properties?.name ?? (existing.name as string)
     const newCoordinates = geometry?.coordinates
       ? JSON.stringify(geometry.coordinates)
       : (existing.coordinates as string)
     const newGeometryType = geometry?.type ?? (existing.geometry_type as string)
-    const newProperties = properties !== undefined
-      ? JSON.stringify(properties)
-      : (existing.properties as string | null)
 
-    db.run(
-      `UPDATE features SET name=?, geometry_type=?, coordinates=?, properties=? WHERE id=?`,
-      [newName, newGeometryType, newCoordinates, newProperties, params.id]
-    )
+    // ไม่เก็บ name ซ้ำใน properties JSON — name อยู่ใน column name เท่านั้น
+    let newProperties: string | null = existing.properties as string | null
+    if (properties !== undefined) {
+      const { name: _name, ...extraProps } = properties
+      newProperties = Object.keys(extraProps).length > 0 ? JSON.stringify(extraProps) : null
+    }
+
+    try {
+      db.run(
+        `UPDATE features SET name=?, geometry_type=?, coordinates=?, properties=? WHERE id=?`,
+        [newName, newGeometryType, newCoordinates, newProperties, params.id]
+      )
+    } catch (err) {
+      console.error(`[features] PUT /${params.id} UPDATE failed:`, err)
+      return serverError(set)
+    }
 
     const row = db.query<Record<string, unknown>, [string]>('SELECT * FROM features WHERE id = ?').get(params.id)
-    return toFeature(row!)
+    if (!row) return serverError(set)
+    return toFeature(row)
   })
 
   // DELETE /api/features/:id
@@ -109,5 +129,5 @@ export const featuresRoutes = new Elysia({ prefix: '/api/features' })
 
     db.run('DELETE FROM features WHERE id = ?', [params.id])
     set.status = 204
-    return ''
+    // ไม่ return body — HTTP 204 No Content ต้องไม่มี body
   })

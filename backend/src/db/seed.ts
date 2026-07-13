@@ -16,11 +16,19 @@ const locations = [
 
 const count = db.query<{ c: number }, []>('SELECT COUNT(*) as c FROM features').get()
 if (count && count.c === 0) {
-  for (const loc of locations) {
-    db.run(
-      `INSERT INTO features (id, name, geometry_type, coordinates) VALUES (?, ?, 'Point', ?)`,
-      [randomUUID(), loc.name, JSON.stringify(loc.coordinates)]
-    )
+  try {
+    db.run('BEGIN')
+    for (const loc of locations) {
+      db.run(
+        `INSERT INTO features (id, name, geometry_type, coordinates) VALUES (?, ?, 'Point', ?)`,
+        [randomUUID(), loc.name, JSON.stringify(loc.coordinates)]
+      )
+    }
+    db.run('COMMIT')
+    console.log('Seeded 10 Thai locations')
+  } catch (err) {
+    db.run('ROLLBACK')
+    console.error('[seed] Seeding failed, rolled back:', err)
+    process.exit(1)
   }
-  console.log('Seeded 10 Thai locations')
 }

@@ -22,7 +22,8 @@ export const logsRoutes = new Elysia({ prefix: '/api/logs' })
 
   // GET /api/logs?limit=100&from=ISO&to=ISO
   .get('/', ({ query }) => {
-    const limit = Math.min(Number(query.limit ?? 100), 500)
+    const rawLimit = query.limit !== undefined ? parseInt(String(query.limit), 10) : 100
+    const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 500) : 100
     const from = query.from as string | undefined
     const to = query.to as string | undefined
 
