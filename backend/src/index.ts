@@ -1,0 +1,20 @@
+import { Elysia } from 'elysia'
+import { swagger } from '@elysiajs/swagger'
+import { cors } from '@elysiajs/cors'
+import { loggerPlugin } from './plugins/logger'
+import { featuresRoutes } from './routes/features'
+import { logsRoutes } from './routes/logs'
+import './db/seed'
+
+export const app = new Elysia()
+  .use(cors())
+  .use(swagger({ path: '/api/docs' }))
+  .use(loggerPlugin)
+  .get('/api/health', () => ({ status: 'ok', timestamp: new Date().toISOString() }))
+  .use(featuresRoutes)
+  .use(logsRoutes)
+  .listen(process.env.PORT ?? 3000)
+
+export type App = typeof app
+
+console.log(`Backend running on http://localhost:${app.server?.port}`)
