@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'bun:test'
+import { describe, it, expect, afterAll } from 'bun:test'
 
 // ต้อง set ก่อน import app เพื่อให้ DB ใช้ in-memory
 process.env.DB_PATH = ':memory:'
@@ -108,7 +108,15 @@ describe('Spatial Data Platform API', () => {
     expect(body.properties.name).toBe('Updated Location')
   })
 
-  // 10. PUT nonexistent → 404
+  // 10. PUT empty body → 400
+  it('PUT /api/features/:id empty body → 400', async () => {
+    const res = await app.handle(req('PUT', `/api/features/${createdId}`, {}))
+    expect(res.status).toBe(400)
+    const body = await res.json()
+    expect(body).toHaveProperty('error')
+  })
+
+  // 11. PUT nonexistent → 404
   it('PUT /api/features/nonexistent → 404', async () => {
     const res = await app.handle(req('PUT', '/api/features/does-not-exist-99999', {
       properties: { name: 'Ghost' },
@@ -116,13 +124,13 @@ describe('Spatial Data Platform API', () => {
     expect(res.status).toBe(404)
   })
 
-  // 11. DELETE /api/features/:id → 204
+  // 12. DELETE /api/features/:id → 204
   it('DELETE /api/features/:id → 204', async () => {
     const res = await app.handle(req('DELETE', `/api/features/${createdId}`))
     expect(res.status).toBe(204)
   })
 
-  // 12. DELETE nonexistent → 404
+  // 13. DELETE nonexistent → 404
   it('DELETE /api/features/nonexistent → 404', async () => {
     const res = await app.handle(req('DELETE', '/api/features/does-not-exist-99999'))
     expect(res.status).toBe(404)

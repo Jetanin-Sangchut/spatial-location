@@ -6,7 +6,7 @@ console.log(`[db] Using database at: ${DB_PATH}`)
 let db: Database
 try {
   db = new Database(DB_PATH, { create: true })
-  db.exec(`
+  db.run(`
     CREATE TABLE IF NOT EXISTS features (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -15,7 +15,9 @@ try {
       properties TEXT,
       created_at TEXT DEFAULT (datetime('now'))
     );
+  `)
 
+  db.run(`
     CREATE TABLE IF NOT EXISTS logs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       request_id TEXT NOT NULL UNIQUE,

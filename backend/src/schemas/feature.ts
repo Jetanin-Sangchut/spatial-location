@@ -12,7 +12,10 @@ export const CreateFeatureSchema = z.object({
   }),
   properties: z.object({
     name: z.string().min(1, 'กรุณาระบุชื่อสถานที่'),
-  }).passthrough(),
+  }).loose(),
 })
 
-export const UpdateFeatureSchema = CreateFeatureSchema.partial()
+export const UpdateFeatureSchema = CreateFeatureSchema.partial().refine(
+  d => d.geometry !== undefined || d.properties !== undefined,
+  { message: 'ต้องระบุ geometry หรือ properties อย่างน้อย 1 อย่าง' },
+)

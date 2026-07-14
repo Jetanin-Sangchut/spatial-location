@@ -4,17 +4,22 @@ import { db } from '../db/client'
 import { CreateFeatureSchema, UpdateFeatureSchema } from '../schemas/feature'
 import type { GeoJSONFeature, GeoJSONFeatureCollection } from '../types/geojson'
 
-// แปลง DB row เป็น GeoJSON Feature — throw ถ้าข้อมูล JSON เสียหาย
-function toFeature(row: Record<string, unknown>): GeoJSONFeature {
-  const coordinates = JSON.parse(row.coordinates as string) as [number, number]
-  const extraProps = row.properties
-    ? (JSON.parse(row.properties as string) as Record<string, unknown>)
-    : {}
-  return {
-    id: row.id as string,
-    type: 'Feature',
-    geometry: { type: 'Point', coordinates },
-    properties: { name: row.name as string, ...extraProps },
+// แปลง DB row เป็น GeoJSON Feature — return null ถ้าข้อมูล JSON เสียหาย (ไม่ทำให้ list ทั้งหมด fail)
+function toFeature(row: Record<string, unknown>): GeoJSONFeature | null {
+  try {
+    const coordinates = JSON.parse(row.coordinates as string) as [number, number]
+    const extraProps = row.properties
+      ? (JSON.parse(row.properties as string) as Record<string, unknown>)
+      : {}
+    return {
+      id: row.id as string,
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates },
+      properties: { name: row.name as string, ...extraProps },
+    }
+  } catch (err) {
+    console.error(`[features] toFeature corrupt row id=${row.id}:`, err)
+    return null
   }
 }
 
@@ -34,7 +39,7 @@ export const featuresRoutes = new Elysia({ prefix: '/api/features' })
   .get('/', ({ set }) => {
     try {
       const rows = db.query<Record<string, unknown>, []>('SELECT * FROM features ORDER BY created_at DESC').all()
-      const features = rows.map(toFeature)
+      const features = rows.map(toFeature).filter((f): f is GeoJSONFeature => f !== null)
       const collection: GeoJSONFeatureCollection = { type: 'FeatureCollection', features }
       return collection
     } catch (err) {
@@ -77,14 +82,25 @@ export const featuresRoutes = new Elysia({ prefix: '/api/features' })
     }
 
     set.status = 201
-    const row = db.query<Record<string, unknown>, [string]>('SELECT * FROM features WHERE id = ?').get(id)
-    if (!row) return serverError(set)
-    return toFeature(row)
+    try {
+      const row = db.query<Record<string, unknown>, [string]>('SELECT * FROM features WHERE id = ?').get(id)
+      if (!row) return serverError(set)
+      return toFeature(row)
+    } catch (err) {
+      console.error('[features] POST SELECT-after-INSERT failed:', err)
+      return serverError(set)
+    }
   })
 
   // PUT /api/features/:id
   .put('/:id', ({ params, body, set }) => {
-    const existing = db.query<Record<string, unknown>, [string]>('SELECT * FROM features WHERE id = ?').get(params.id)
+    let existing: Record<string, unknown> | undefined
+    try {
+      existing = db.query<Record<string, unknown>, [string]>('SELECT * FROM features WHERE id = ?').get(params.id) ?? undefined
+    } catch (err) {
+      console.error(`[features] PUT /${params.id} existence check failed:`, err)
+      return serverError(set)
+    }
     if (!existing) return notFound(set)
 
     const parsed = UpdateFeatureSchema.safeParse(body)
@@ -117,17 +133,33 @@ export const featuresRoutes = new Elysia({ prefix: '/api/features' })
       return serverError(set)
     }
 
-    const row = db.query<Record<string, unknown>, [string]>('SELECT * FROM features WHERE id = ?').get(params.id)
-    if (!row) return serverError(set)
-    return toFeature(row)
+    try {
+      const row = db.query<Record<string, unknown>, [string]>('SELECT * FROM features WHERE id = ?').get(params.id)
+      if (!row) return serverError(set)
+      return toFeature(row)
+    } catch (err) {
+      console.error(`[features] PUT /${params.id} SELECT-after-UPDATE failed:`, err)
+      return serverError(set)
+    }
   })
 
   // DELETE /api/features/:id
   .delete('/:id', ({ params, set }) => {
-    const existing = db.query<Record<string, unknown>, [string]>('SELECT * FROM features WHERE id = ?').get(params.id)
+    let existing: Record<string, unknown> | undefined
+    try {
+      existing = db.query<Record<string, unknown>, [string]>('SELECT * FROM features WHERE id = ?').get(params.id) ?? undefined
+    } catch (err) {
+      console.error(`[features] DELETE /${params.id} existence check failed:`, err)
+      return serverError(set)
+    }
     if (!existing) return notFound(set)
 
-    db.run('DELETE FROM features WHERE id = ?', [params.id])
+    try {
+      db.run('DELETE FROM features WHERE id = ?', [params.id])
+    } catch (err) {
+      console.error(`[features] DELETE /${params.id} failed:`, err)
+      return serverError(set)
+    }
     set.status = 204
     // ไม่ return body — HTTP 204 No Content ต้องไม่มี body
   })

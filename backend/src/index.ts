@@ -8,7 +8,7 @@ import './db/seed'
 
 export const app = new Elysia()
   .use(cors())
-  .use(swagger({ path: '/api/docs' }))
+  .use(swagger({ path: '/swagger' }))
   .use(loggerPlugin)
   .get('/api/health', () => ({ status: 'ok', timestamp: new Date().toISOString() }))
   .use(featuresRoutes)
