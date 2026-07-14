@@ -5,12 +5,53 @@ import { CssBaseline, ThemeProvider, createTheme } from '@mui/material'
 import App from './App'
 import 'maplibre-gl/dist/maplibre-gl.css'
 
-/** React Query client — ใช้ค่า default สำหรับ Phase 1 */
+/** React Query client */
 const queryClient = new QueryClient()
 
-/** MUI theme หลักของ app */
+/** Dark GIS theme */
 const theme = createTheme({
-  palette: { primary: { main: '#1976d2' } },
+  palette: {
+    mode: 'dark',
+    background: {
+      default: '#0D1117',
+      paper: '#161B22',
+    },
+    primary: {
+      main: '#00D4C8',
+      contrastText: '#0D1117',
+    },
+    error: {
+      main: '#F85149',
+    },
+    text: {
+      primary: '#E6EDF3',
+      secondary: '#8B949E',
+    },
+  },
+  typography: {
+    fontFamily: 'Instrument Sans, sans-serif',
+  },
+  components: {
+    MuiCssBaseline: {
+      styleOverrides: `
+        html, body, #root {
+          height: 100%;
+          margin: 0;
+          padding: 0;
+          overflow: hidden;
+        }
+        /* custom MapLibre popup */
+        .maplibregl-popup-content {
+          background: transparent !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+        }
+        .maplibregl-popup-tip {
+          display: none !important;
+        }
+      `,
+    },
+  },
 })
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

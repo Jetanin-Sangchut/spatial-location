@@ -19,6 +19,7 @@ export const useCreateFeature = () => {
   return useMutation({
     mutationFn: api.createFeature,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['features'] }),
+    onError: (err) => console.error('[useCreateFeature] failed:', err),
   })
 }
 
@@ -31,6 +32,7 @@ export const useUpdateFeature = () => {
     mutationFn: ({ id, body }: { id: string; body: unknown }) =>
       api.updateFeature(id, body),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['features'] }),
+    onError: (err) => console.error('[useUpdateFeature] failed:', err),
   })
 }
 
@@ -42,5 +44,6 @@ export const useDeleteFeature = () => {
   return useMutation({
     mutationFn: api.deleteFeature,
     onSuccess: () => qc.invalidateQueries({ queryKey: ['features'] }),
+    onError: (err) => console.error('[useDeleteFeature] failed:', err),
   })
 }
