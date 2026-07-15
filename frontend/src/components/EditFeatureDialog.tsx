@@ -79,7 +79,7 @@ export default function EditFeatureDialog({
       onClose={onClose}
       maxWidth="xs"
       fullWidth
-      PaperProps={{ sx: { bgcolor: '#161B22', backgroundImage: 'none' } }}
+      slotProps={{ paper: { sx: { bgcolor: '#161B22', backgroundImage: 'none' } } }}
     >
       <DialogTitle sx={{ fontFamily: 'Instrument Sans, sans-serif' }}>
         แก้ไขสถานที่

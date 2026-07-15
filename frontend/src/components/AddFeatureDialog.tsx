@@ -83,7 +83,7 @@ export default function AddFeatureDialog({
       onClose={handleClose}
       maxWidth="xs"
       fullWidth
-      PaperProps={{ sx: { bgcolor: '#161B22', backgroundImage: 'none' } }}
+      slotProps={{ paper: { sx: { bgcolor: '#161B22', backgroundImage: 'none' } } }}
     >
       <DialogTitle sx={{ fontFamily: 'Instrument Sans, sans-serif' }}>
         เพิ่มสถานที่ใหม่

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Box, Button, Grid, Alert, Typography } from '@mui/material'
+import { Box, Button, Grid2, Alert, Typography } from '@mui/material'
 import { Add as AddIcon } from '@mui/icons-material'
 import Swal from 'sweetalert2'
 import SearchBar from './SearchBar'
@@ -67,13 +67,11 @@ export default function DashboardLayout() {
 
   return (
     <Box sx={{ width: '100vw', height: '100vh', bgcolor: '#0D1117', overflow: 'hidden' }}>
-      <Grid container sx={{ height: '100%' }}>
+      <Grid2 container sx={{ height: '100%' }}>
 
         {/* Sidebar — col-4 desktop, col-12 mobile (50vh) */}
-        <Grid
-          item
-          xs={12}
-          md={4}
+        <Grid2
+          size={{ xs: 12, md: 4 }}
           sx={{
             height: { xs: '50vh', md: '100%' },
             display: 'flex',
@@ -139,19 +137,17 @@ export default function DashboardLayout() {
               เพิ่มสถานที่
             </Button>
           </Box>
-        </Grid>
+        </Grid2>
 
         {/* Map — col-8 desktop, col-12 mobile (50vh) */}
-        <Grid
-          item
-          xs={12}
-          md={8}
+        <Grid2
+          size={{ xs: 12, md: 8 }}
           sx={{ height: { xs: '50vh', md: '100%' }, position: 'relative' }}
         >
           <MapView features={filteredFeatures} onMapClick={handleMapClick} />
-        </Grid>
+        </Grid2>
 
-      </Grid>
+      </Grid2>
 
       <AddFeatureDialog
         open={addOpen}

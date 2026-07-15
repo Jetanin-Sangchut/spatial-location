@@ -17,12 +17,14 @@ export default function SearchBar({ value, onChange }: SearchBarProps) {
       placeholder="ค้นหาสถานที่..."
       value={value}
       onChange={e => onChange(e.target.value)}
-      InputProps={{
-        startAdornment: (
-          <InputAdornment position="start">
-            <SearchIcon sx={{ color: 'text.secondary', fontSize: 18 }} />
-          </InputAdornment>
-        ),
+      slotProps={{
+        input: {
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon sx={{ color: 'text.secondary', fontSize: 18 }} />
+            </InputAdornment>
+          ),
+        },
       }}
       sx={{
         '& .MuiOutlinedInput-root': {
