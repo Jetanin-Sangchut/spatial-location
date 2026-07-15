@@ -1,4 +1,4 @@
-import Elysia from 'elysia'
+import Elysia, { StatusMap } from 'elysia'
 import { randomUUID } from 'crypto'
 import { db } from '../db/client'
 
@@ -30,9 +30,10 @@ export const loggerPlugin = new Elysia({ name: 'logger' })
   })
   .onAfterResponse({ as: 'global' }, ({ set, requestId, startedAt }) => {
     try {
-      const statusCode = typeof set.status === 'string'
-        ? parseInt(set.status, 10)
-        : (set.status ?? 200)
+      const raw = set.status ?? 200
+      const statusCode = typeof raw === 'number'
+        ? raw
+        : (StatusMap[raw as keyof typeof StatusMap] ?? 500)
       db.run(
         `UPDATE logs SET status_code=?, success=?, response_time_ms=?, request_completed_at=? WHERE request_id=?`,
         [

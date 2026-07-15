@@ -13,7 +13,7 @@ export const app = new Elysia()
   .get('/api/health', () => ({ status: 'ok', timestamp: new Date().toISOString() }))
   .use(featuresRoutes)
   .use(logsRoutes)
-  .listen(process.env.PORT ?? 3000)
+  .listen({ port: Number(process.env.PORT ?? 3000), hostname: '0.0.0.0' })
 
 export type App = typeof app
 
