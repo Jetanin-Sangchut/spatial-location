@@ -1,0 +1,258 @@
+{
+  "info": {
+    "_postman_id": "2f67ef16-2b48-4aa6-a893-88a0ca153a5b",
+    "name": "Spatial Data Platform",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "25861255"
+  },
+  "item": [
+    {
+      "name": "GET health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/health",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "health"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "GET all",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/features",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "features"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "POST create",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": " application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"geometry\": { \"type\": \"Point\", \"coordinates\": [100.4913, 13.7500] },\r\n  \"properties\": { \"name\": \"วัดพระแก้ว ABC\" }\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/features",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "features"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "PUT update",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": " application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"geometry\": { \"type\": \"Point\", \"coordinates\": [100.5, 13.7] },\r\n  \"properties\": { \"name\": \"ชื่อใหม่\" }\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/features/:id",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "features",
+            ":id"
+          ],
+          "variable": [
+            {
+              "key": "id",
+              "value": "78a591e0-650f-4ea4-aa6c-4629ead078e7"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "DELETE",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/features/:id",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "features",
+            ":id"
+          ],
+          "variable": [
+            {
+              "key": "id",
+              "value": "78a591e0-650f-4ea4-aa6c-4629ead078e7"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "GET by ID",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/features/:id",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "features",
+            ":id"
+          ],
+          "variable": [
+            {
+              "key": "id",
+              "value": "78a591e0-650f-4ea4-aa6c-4629ead078e7"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "GET Logs",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/logs?limit=50&from=2026-07-14T00:00:00Z&to=2026-07-20T23:59:59Z",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "logs"
+          ],
+          "query": [
+            {
+              "key": "limit",
+              "value": "50"
+            },
+            {
+              "key": "from",
+              "value": "2026-07-14T00:00:00Z"
+            },
+            {
+              "key": "to",
+              "value": "2026-07-20T23:59:59Z"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "GET Logs all",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/logs",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "logs"
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://spatial-location-production.up.railway.app"
+    }
+  ]
+}

@@ -1,15 +1,35 @@
-# backend
+# Backend — Spatial Data Platform
 
-To install dependencies:
+Bun + Elysia REST API with SQLite database.
+
+## Setup
 
 ```bash
 bun install
 ```
 
-To run:
+## Run
 
 ```bash
-bun run index.ts
+bun run src/index.ts
+# http://localhost:3000
 ```
 
-This project was created using `bun init` in bun v1.3.11. [Bun](https://bun.com) is a fast all-in-one JavaScript runtime.
+## Environment Variables
+
+```
+PORT=3000          # default: 3000
+DB_PATH=data.db    # default: data.db — use :memory: for ephemeral
+NODE_ENV=development
+```
+
+## API Docs
+
+Swagger UI available at `/swagger` when running.
+
+## Docker
+
+```bash
+docker build -t spatial-backend .
+docker run -p 3000:3000 -e DB_PATH=:memory: spatial-backend
+```
