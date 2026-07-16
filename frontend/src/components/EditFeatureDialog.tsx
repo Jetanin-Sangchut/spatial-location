@@ -45,8 +45,13 @@ export default function EditFeatureDialog({
     if (feature) {
       setName(feature.properties.name)
       setCategory(feature.properties.category ?? 'ทั่วไป')
-      setLon(feature.geometry.coordinates[0].toFixed(6))
-      setLat(feature.geometry.coordinates[1].toFixed(6))
+      if (feature.geometry.type === 'Point') {
+        setLon(feature.geometry.coordinates[0].toFixed(6))
+        setLat(feature.geometry.coordinates[1].toFixed(6))
+      } else {
+        setLon('')
+        setLat('')
+      }
     } else {
       setName('')
       setCategory('ทั่วไป')

@@ -45,4 +45,13 @@ export const logsRoutes = new Elysia({ prefix: '/api/logs' })
 
     const rows = db.query<LogRow, (string | number)[]>(sql).all(...params)
     return { logs: rows, count: rows.length }
+  }, {
+    detail: {
+      tags: ['Logs'],
+      summary: 'List request logs',
+      description:
+        'Returns request logs with response time measurements, ordered by start time descending.\n\n' +
+        'Logs use a two-phase pattern: INSERT on `onBeforeHandle`, UPDATE with status + `response_time_ms` on `onAfterResponse` — so partial rows exist even if the server crashes mid-request.\n\n' +
+        '**Query params:**\n- `limit` — max results (default 100, max 500)\n- `from` — ISO 8601 start time filter\n- `to` — ISO 8601 end time filter',
+    },
   })
