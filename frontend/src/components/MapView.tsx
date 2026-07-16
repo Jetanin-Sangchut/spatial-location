@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import type React from 'react'
 import maplibregl from 'maplibre-gl'
 import type { GeoJSONFeature } from '../types/geojson'
 
@@ -10,6 +11,7 @@ function escapeHtml(str: string): string {
 interface MapViewProps {
   features: GeoJSONFeature[]
   onMapClick: (coords: [number, number]) => void
+  flyToRef?: React.MutableRefObject<((coords: [number, number]) => void) | null>
 }
 
 const SOURCE_ID = 'features'
@@ -18,7 +20,7 @@ const LAYER_ID = 'features-circles'
 /**
  * @description MapLibre GL JS map — GeoJSON markers, popup on click, empty-click handler
  */
-export default function MapView({ features, onMapClick }: MapViewProps) {
+export default function MapView({ features, onMapClick, flyToRef }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   const popupRef = useRef<maplibregl.Popup | null>(null)
@@ -115,6 +117,10 @@ export default function MapView({ features, onMapClick }: MapViewProps) {
           onMapClickRef.current([e.lngLat.lng, e.lngLat.lat])
         }
       })
+      // เปิดให้ parent สั่ง flyTo ได้ผ่าน ref
+      if (flyToRef) {
+        flyToRef.current = (coords) => map.flyTo({ center: coords, zoom: 14 })
+      }
       } catch (err) {
         console.error('[MapView] map load setup failed:', err)
       }
@@ -125,6 +131,7 @@ export default function MapView({ features, onMapClick }: MapViewProps) {
     return () => {
       map.remove()
       mapRef.current = null
+      if (flyToRef) flyToRef.current = null
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

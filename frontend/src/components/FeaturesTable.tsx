@@ -1,20 +1,43 @@
 import { useMemo } from 'react'
-import { DataGrid } from '@mui/x-data-grid'
+import { DataGrid, GridToolbarContainer } from '@mui/x-data-grid'
 import type { GridColDef, GridRenderCellParams } from '@mui/x-data-grid'
-import { IconButton, Stack, Tooltip } from '@mui/material'
-import { Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material'
-import type { GeoJSONFeature } from '../types/geojson'
+import { Button, IconButton, Stack, Tooltip } from '@mui/material'
+import { Download as DownloadIcon, Edit as EditIcon, Delete as DeleteIcon } from '@mui/icons-material'
+import type { GeoJSONFeature, GeoJSONFeatureCollection } from '../types/geojson'
 
 interface FeaturesTableProps {
   features: GeoJSONFeature[]
   onEdit: (feature: GeoJSONFeature) => void
   onDelete: (id: string) => void
+  onFlyTo: (coords: [number, number]) => void
+}
+
+function ExportToolbar({ features }: { features: GeoJSONFeature[] }) {
+  const handleExport = () => {
+    const collection: GeoJSONFeatureCollection = { type: 'FeatureCollection', features }
+    const blob = new Blob([JSON.stringify(collection, null, 2)], { type: 'application/geo+json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'features.geojson'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  return (
+    <GridToolbarContainer>
+      <Button size="small" startIcon={<DownloadIcon />} onClick={handleExport}
+        sx={{ color: '#00D4C8', fontSize: 12, ml: 1 }}>
+        Export GeoJSON
+      </Button>
+    </GridToolbarContainer>
+  )
 }
 
 /**
- * @description MUI DataGrid แสดง features — pagination, Edit/Delete per row
+ * @description MUI DataGrid แสดง features — pagination, Edit/Delete per row, Export GeoJSON
  */
-export default function FeaturesTable({ features, onEdit, onDelete }: FeaturesTableProps) {
+export default function FeaturesTable({ features, onEdit, onDelete, onFlyTo }: FeaturesTableProps) {
   const rows = useMemo(
     () =>
       features.map(f => ({
@@ -64,7 +87,7 @@ export default function FeaturesTable({ features, onEdit, onDelete }: FeaturesTa
           <Tooltip title="แก้ไข">
             <IconButton
               size="small"
-              onClick={() => onEdit(params.row._feature as GeoJSONFeature)}
+              onClick={e => { e.stopPropagation(); onEdit(params.row._feature as GeoJSONFeature) }}
               sx={{ color: '#00D4C8' }}
             >
               <EditIcon />
@@ -73,7 +96,7 @@ export default function FeaturesTable({ features, onEdit, onDelete }: FeaturesTa
           <Tooltip title="ลบ">
             <IconButton
               size="small"
-              onClick={() => onDelete(params.row.id as string)}
+              onClick={e => { e.stopPropagation(); onDelete(params.row.id as string) }}
               sx={{ color: '#F85149' }}
             >
               <DeleteIcon />
@@ -91,6 +114,11 @@ export default function FeaturesTable({ features, onEdit, onDelete }: FeaturesTa
       pageSizeOptions={[10, 25]}
       initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
       disableRowSelectionOnClick
+      onRowClick={params => onFlyTo([
+        (params.row._feature as GeoJSONFeature).geometry.coordinates[0],
+        (params.row._feature as GeoJSONFeature).geometry.coordinates[1],
+      ])}
+      slots={{ toolbar: () => <ExportToolbar features={features} /> }}
       sx={{
         border: 'none',
         flex: 1,

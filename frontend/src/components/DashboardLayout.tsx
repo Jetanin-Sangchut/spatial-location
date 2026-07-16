@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { Box, Button, Grid2, Alert, Typography } from '@mui/material'
 import { Add as AddIcon } from '@mui/icons-material'
 import Swal from 'sweetalert2'
@@ -27,6 +27,7 @@ export default function DashboardLayout() {
   const { data, isLoading, isError } = useFeatures()
   const { mutate: deleteFeature } = useDeleteFeature()
 
+  const flyToRef = useRef<((coords: [number, number]) => void) | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [addOpen, setAddOpen] = useState(false)
   const [clickCoords, setClickCoords] = useState<[number, number] | null>(null)
@@ -37,10 +38,17 @@ export default function DashboardLayout() {
     const all = data?.features ?? []
     if (!searchQuery.trim()) return all
     const q = searchQuery.toLowerCase()
-    return all.filter(f => (f.properties.name ?? '').toLowerCase().includes(q))
+    return all.filter(f => {
+      const name = (f.properties.name ?? '').toLowerCase()
+      const lon = f.geometry.coordinates[0].toFixed(6)
+      const lat = f.geometry.coordinates[1].toFixed(6)
+      return name.includes(q) || lon.includes(q) || lat.includes(q)
+    })
   }, [data, searchQuery])
 
   const handleMapClick = (coords: [number, number]) => {
+    // blur canvas ก่อนเปิด dialog เพื่อหลีกเลี่ยง aria-hidden warning จาก MUI Dialog
+    ;(document.activeElement as HTMLElement | null)?.blur()
     setClickCoords(coords)
     setAddOpen(true)
   }
@@ -115,6 +123,7 @@ export default function DashboardLayout() {
                 features={filteredFeatures}
                 onEdit={setEditFeature}
                 onDelete={handleDelete}
+                onFlyTo={coords => flyToRef.current?.(coords)}
               />
             )}
           </Box>
@@ -144,7 +153,7 @@ export default function DashboardLayout() {
           size={{ xs: 12, md: 8 }}
           sx={{ height: { xs: '50vh', md: '100%' }, position: 'relative' }}
         >
-          <MapView features={filteredFeatures} onMapClick={handleMapClick} />
+          <MapView features={filteredFeatures} onMapClick={handleMapClick} flyToRef={flyToRef} />
         </Grid2>
 
       </Grid2>
