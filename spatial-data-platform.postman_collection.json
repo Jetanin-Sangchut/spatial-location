@@ -55,7 +55,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n  \"geometry\": { \"type\": \"Point\", \"coordinates\": [100.4913, 13.7500] },\r\n  \"properties\": { \"name\": \"วัดพระแก้ว ABC\" }\r\n}",
+          "raw": "{\r\n  \"geometry\": { \"type\": \"Point\", \"coordinates\": [100.4913, 13.7500] },\r\n  \"properties\": { \"name\": \"วัดพระแก้ว ABC\", \"category\": \"วัด\" }\r\n}",
           "options": {
             "raw": {
               "language": "json"
@@ -88,7 +88,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\r\n  \"geometry\": { \"type\": \"Point\", \"coordinates\": [100.5, 13.7] },\r\n  \"properties\": { \"name\": \"ชื่อใหม่\" }\r\n}",
+          "raw": "{\r\n  \"geometry\": { \"type\": \"Point\", \"coordinates\": [100.5, 13.7] },\r\n  \"properties\": { \"name\": \"ชื่อใหม่\", \"category\": \"ทั่วไป\" }\r\n}",
           "options": {
             "raw": {
               "language": "json"
