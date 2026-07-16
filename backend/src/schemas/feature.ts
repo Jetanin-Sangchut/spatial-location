@@ -12,6 +12,7 @@ export const CreateFeatureSchema = z.object({
   }),
   properties: z.object({
     name: z.string().min(1, 'กรุณาระบุชื่อสถานที่'),
+    category: z.string().min(1).optional(),
   }).loose(),
 })
 

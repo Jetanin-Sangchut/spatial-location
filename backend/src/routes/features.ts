@@ -15,7 +15,7 @@ function toFeature(row: Record<string, unknown>): GeoJSONFeature | null {
       id: row.id as string,
       type: 'Feature',
       geometry: { type: 'Point', coordinates },
-      properties: { name: row.name as string, ...extraProps },
+      properties: { name: row.name as string, category: (row.category as string | undefined) ?? 'ทั่วไป', ...extraProps },
     }
   } catch (err) {
     console.error(`[features] toFeature corrupt row id=${row.id}:`, err)
@@ -69,12 +69,14 @@ export const featuresRoutes = new Elysia({ prefix: '/api/features' })
     }
 
     const { geometry, properties } = parsed.data
+    const { name, category = 'ทั่วไป', ...extraProps } = properties
+    const propsJson = Object.keys(extraProps).length > 0 ? JSON.stringify(extraProps) : null
     const id = randomUUID()
 
     try {
       db.run(
-        `INSERT INTO features (id, name, geometry_type, coordinates, properties) VALUES (?, ?, ?, ?, ?)`,
-        [id, properties.name, geometry.type, JSON.stringify(geometry.coordinates), null]
+        `INSERT INTO features (id, name, category, geometry_type, coordinates, properties) VALUES (?, ?, ?, ?, ?, ?)`,
+        [id, name, category, geometry.type, JSON.stringify(geometry.coordinates), propsJson]
       )
     } catch (err) {
       console.error('[features] POST INSERT failed:', err)
@@ -111,22 +113,23 @@ export const featuresRoutes = new Elysia({ prefix: '/api/features' })
 
     const { geometry, properties } = parsed.data
     const newName = properties?.name ?? (existing.name as string)
+    const newCategory = properties?.category ?? (existing.category as string) ?? 'ทั่วไป'
     const newCoordinates = geometry?.coordinates
       ? JSON.stringify(geometry.coordinates)
       : (existing.coordinates as string)
     const newGeometryType = geometry?.type ?? (existing.geometry_type as string)
 
-    // ไม่เก็บ name ซ้ำใน properties JSON — name อยู่ใน column name เท่านั้น
+    // ไม่เก็บ name / category ซ้ำใน properties JSON — อยู่ใน column เท่านั้น
     let newProperties: string | null = existing.properties as string | null
     if (properties !== undefined) {
-      const { name: _name, ...extraProps } = properties
+      const { name: _name, category: _cat, ...extraProps } = properties
       newProperties = Object.keys(extraProps).length > 0 ? JSON.stringify(extraProps) : null
     }
 
     try {
       db.run(
-        `UPDATE features SET name=?, geometry_type=?, coordinates=?, properties=? WHERE id=?`,
-        [newName, newGeometryType, newCoordinates, newProperties, params.id]
+        `UPDATE features SET name=?, category=?, geometry_type=?, coordinates=?, properties=? WHERE id=?`,
+        [newName, newCategory, newGeometryType, newCoordinates, newProperties, params.id]
       )
     } catch (err) {
       console.error(`[features] PUT /${params.id} UPDATE failed:`, err)

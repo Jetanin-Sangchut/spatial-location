@@ -10,6 +10,7 @@ try {
     CREATE TABLE IF NOT EXISTS features (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
+      category TEXT NOT NULL DEFAULT 'ทั่วไป',
       geometry_type TEXT NOT NULL DEFAULT 'Point',
       coordinates TEXT NOT NULL,
       properties TEXT,
