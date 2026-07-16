@@ -21,7 +21,7 @@ interface LogRow {
 export const logsRoutes = new Elysia({ prefix: '/api/logs' })
 
   // GET /api/logs?limit=100&from=ISO&to=ISO
-  .get('/', ({ query }) => {
+  .get('/', ({ query, set }) => {
     const rawLimit = query.limit !== undefined ? parseInt(String(query.limit), 10) : 100
     const limit = Number.isFinite(rawLimit) && rawLimit > 0 ? Math.min(rawLimit, 500) : 100
     const from = query.from as string | undefined
@@ -29,8 +29,8 @@ export const logsRoutes = new Elysia({ prefix: '/api/logs' })
 
     // ตรวจ format ISO 8601 ก่อนใช้เป็น filter — ป้องกันผลลัพธ์ผิดจาก SQLite string comparison
     const ISO_RE = /^\d{4}-\d{2}-\d{2}(T[\d:.Z+-]+)?$/
-    if (from && !ISO_RE.test(from)) return { error: 'invalid from — ต้องเป็น ISO 8601', status: 400 }
-    if (to && !ISO_RE.test(to)) return { error: 'invalid to — ต้องเป็น ISO 8601', status: 400 }
+    if (from && !ISO_RE.test(from)) { set.status = 400; return { error: 'invalid from — ต้องเป็น ISO 8601', status: 400 } }
+    if (to && !ISO_RE.test(to)) { set.status = 400; return { error: 'invalid to — ต้องเป็น ISO 8601', status: 400 } }
 
     const conditions: string[] = []
     const params: (string | number)[] = []
