@@ -60,21 +60,27 @@ export default function EditFeatureDialog({
     }
   }, [feature?.id])
 
+  const isPoint = feature?.geometry.type === 'Point'
+
   const handleSubmit = () => {
     if (!feature || !name.trim()) return
-    const lonNum = parseFloat(lon)
-    const latNum = parseFloat(lat)
-    if (isNaN(lonNum) || isNaN(latNum)) return
-    if (lonNum < -180 || lonNum > 180 || latNum < -90 || latNum > 90) return
+
+    type UpdateBody = {
+      geometry?: { type: 'Point'; coordinates: [number, number] }
+      properties: { name: string; category: string }
+    }
+    const body: UpdateBody = { properties: { name: name.trim(), category } }
+
+    if (isPoint) {
+      const lonNum = parseFloat(lon)
+      const latNum = parseFloat(lat)
+      if (isNaN(lonNum) || isNaN(latNum)) return
+      if (lonNum < -180 || lonNum > 180 || latNum < -90 || latNum > 90) return
+      body.geometry = { type: 'Point', coordinates: [lonNum, latNum] }
+    }
 
     updateFeature(
-      {
-        id: feature.id,
-        body: {
-          geometry: { type: 'Point', coordinates: [lonNum, latNum] },
-          properties: { name: name.trim(), category },
-        },
-      },
+      { id: feature.id, body },
       {
         onSuccess: () => {
           onSuccess('แก้ไขสถานที่สำเร็จ')
@@ -124,26 +130,28 @@ export default function EditFeatureDialog({
           >
             {CATEGORIES.map(c => <MenuItem key={c} value={c} sx={{ fontSize: 13 }}>{c}</MenuItem>)}
           </Select>
-          <Stack direction="row" spacing={1}>
-            <TextField
-              label="Longitude"
-              value={lon}
-              onChange={e => setLon(e.target.value)}
-              fullWidth
-              size="small"
-              inputProps={{ style: { fontFamily: 'JetBrains Mono, monospace' } }}
-              sx={fieldSx}
-            />
-            <TextField
-              label="Latitude"
-              value={lat}
-              onChange={e => setLat(e.target.value)}
-              fullWidth
-              size="small"
-              inputProps={{ style: { fontFamily: 'JetBrains Mono, monospace' } }}
-              sx={fieldSx}
-            />
-          </Stack>
+          {isPoint && (
+            <Stack direction="row" spacing={1}>
+              <TextField
+                label="Longitude"
+                value={lon}
+                onChange={e => setLon(e.target.value)}
+                fullWidth
+                size="small"
+                inputProps={{ style: { fontFamily: 'JetBrains Mono, monospace' } }}
+                sx={fieldSx}
+              />
+              <TextField
+                label="Latitude"
+                value={lat}
+                onChange={e => setLat(e.target.value)}
+                fullWidth
+                size="small"
+                inputProps={{ style: { fontFamily: 'JetBrains Mono, monospace' } }}
+                sx={fieldSx}
+              />
+            </Stack>
+          )}
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
@@ -152,7 +160,7 @@ export default function EditFeatureDialog({
         </Button>
         <Button
           onClick={handleSubmit}
-          disabled={!name.trim() || !lon || !lat || isPending}
+          disabled={!name.trim() || (isPoint && (!lon || !lat)) || isPending}
           variant="contained"
           sx={{ bgcolor: '#00D4C8', color: '#0D1117', '&:hover': { bgcolor: '#00bfb4' } }}
         >

@@ -27,6 +27,11 @@ export const logsRoutes = new Elysia({ prefix: '/api/logs' })
     const from = query.from as string | undefined
     const to = query.to as string | undefined
 
+    // ตรวจ format ISO 8601 ก่อนใช้เป็น filter — ป้องกันผลลัพธ์ผิดจาก SQLite string comparison
+    const ISO_RE = /^\d{4}-\d{2}-\d{2}(T[\d:.Z+-]+)?$/
+    if (from && !ISO_RE.test(from)) return { error: 'invalid from — ต้องเป็น ISO 8601', status: 400 }
+    if (to && !ISO_RE.test(to)) return { error: 'invalid to — ต้องเป็น ISO 8601', status: 400 }
+
     const conditions: string[] = []
     const params: (string | number)[] = []
 
