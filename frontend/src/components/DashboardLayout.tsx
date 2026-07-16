@@ -43,8 +43,8 @@ export default function DashboardLayout() {
     const q = searchQuery.toLowerCase()
     return all.filter(f => {
       const name = (f.properties.name ?? '').toLowerCase()
-      const lon = f.geometry.coordinates[0].toFixed(6)
-      const lat = f.geometry.coordinates[1].toFixed(6)
+      const lon = f.geometry.type === 'Point' ? f.geometry.coordinates[0].toFixed(6) : ''
+      const lat = f.geometry.type === 'Point' ? f.geometry.coordinates[1].toFixed(6) : ''
       const matchesSearch = !q || name.includes(q) || lon.includes(q) || lat.includes(q)
       const matchesCategory = !selectedCategory || (f.properties.category ?? 'ทั่วไป') === selectedCategory
       return matchesSearch && matchesCategory
@@ -84,7 +84,7 @@ export default function DashboardLayout() {
 
         {/* Sidebar — col-4 desktop, col-12 mobile (50vh) */}
         <Grid2
-          size={{ xs: 12, md: 4 }}
+          size={{ xs: 12, md: 5 }}
           sx={{
             height: { xs: '50vh', md: '100%' },
             display: 'flex',
@@ -177,7 +177,7 @@ export default function DashboardLayout() {
 
         {/* Map — col-8 desktop, col-12 mobile (50vh) */}
         <Grid2
-          size={{ xs: 12, md: 8 }}
+          size={{ xs: 12, md: 7 }}
           sx={{ height: { xs: '50vh', md: '100%' }, position: 'relative' }}
         >
           <MapView features={filteredFeatures} onMapClick={handleMapClick} flyToRef={flyToRef} />

@@ -76,6 +76,62 @@
       "response": []
     },
     {
+      "name": "POST create LineString",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": " application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"geometry\": {\r\n    \"type\": \"LineString\",\r\n    \"coordinates\": [\r\n      [100.5220, 13.7218],\r\n      [100.5285, 13.7241],\r\n      [100.5340, 13.7260]\r\n    ]\r\n  },\r\n  \"properties\": { \"name\": \"ถนนสาธรใต้\", \"category\": \"ทั่วไป\" }\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/features",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "features"]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "POST create Polygon",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": " application/json",
+            "type": "text"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"geometry\": {\r\n    \"type\": \"Polygon\",\r\n    \"coordinates\": [[\r\n      [100.5404, 13.7290],\r\n      [100.5454, 13.7290],\r\n      [100.5454, 13.7330],\r\n      [100.5404, 13.7330],\r\n      [100.5404, 13.7290]\r\n    ]]\r\n  },\r\n  \"properties\": { \"name\": \"สวนเบญจกิติ\", \"category\": \"อุทยาน\" }\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/features",
+          "host": ["{{baseUrl}}"],
+          "path": ["api", "features"]
+        }
+      },
+      "response": []
+    },
+    {
       "name": "PUT update",
       "request": {
         "method": "PUT",

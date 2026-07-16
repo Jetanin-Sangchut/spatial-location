@@ -2,10 +2,10 @@
 export interface GeoJSONFeature {
   id: string
   type: 'Feature'
-  geometry: {
-    type: 'Point'
-    coordinates: [number, number]
-  }
+  geometry:
+    | { type: 'Point';      coordinates: [number, number] }
+    | { type: 'LineString'; coordinates: [number, number][] }
+    | { type: 'Polygon';    coordinates: [number, number][][] }
   properties: {
     name: string
     category?: string

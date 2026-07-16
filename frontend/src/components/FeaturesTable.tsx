@@ -44,8 +44,9 @@ export default function FeaturesTable({ features, onEdit, onDelete, onFlyTo }: F
         id: f.id,
         name: f.properties.name ?? 'ไม่มีชื่อ',
         category: f.properties.category ?? 'ทั่วไป',
-        lon: f.geometry.coordinates[0].toFixed(6),
-        lat: f.geometry.coordinates[1].toFixed(6),
+        geometry_type: f.geometry.type,
+        lon: f.geometry.type === 'Point' ? f.geometry.coordinates[0].toFixed(6) : '—',
+        lat: f.geometry.type === 'Point' ? f.geometry.coordinates[1].toFixed(6) : '—',
         _feature: f,
       })),
     [features],
@@ -57,6 +58,11 @@ export default function FeaturesTable({ features, onEdit, onDelete, onFlyTo }: F
       headerName: 'ชื่อ',
       flex: 1,
       minWidth: 100,
+    },
+    {
+      field: 'geometry_type',
+      headerName: 'Geometry',
+      width: 95,
     },
     {
       field: 'category',
@@ -118,12 +124,18 @@ export default function FeaturesTable({ features, onEdit, onDelete, onFlyTo }: F
       rows={rows}
       columns={columns}
       pageSizeOptions={[10, 25]}
-      initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
+      initialState={{ pagination: { paginationModel: { pageSize: 25 } } }}
       disableRowSelectionOnClick
-      onRowClick={params => onFlyTo([
-        (params.row._feature as GeoJSONFeature).geometry.coordinates[0],
-        (params.row._feature as GeoJSONFeature).geometry.coordinates[1],
-      ])}
+      onRowClick={params => {
+        const f = params.row._feature as GeoJSONFeature
+        if (f.geometry.type === 'Point') {
+          onFlyTo([f.geometry.coordinates[0], f.geometry.coordinates[1]])
+        } else if (f.geometry.type === 'LineString') {
+          onFlyTo([f.geometry.coordinates[0][0], f.geometry.coordinates[0][1]])
+        } else if (f.geometry.type === 'Polygon') {
+          onFlyTo([f.geometry.coordinates[0][0][0], f.geometry.coordinates[0][0][1]])
+        }
+      }}
       slots={{ toolbar: () => <ExportToolbar features={features} /> }}
       sx={{
         border: 'none',

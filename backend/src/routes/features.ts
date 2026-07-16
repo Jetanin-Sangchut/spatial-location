@@ -7,14 +7,15 @@ import type { GeoJSONFeature, GeoJSONFeatureCollection } from '../types/geojson'
 // แปลง DB row เป็น GeoJSON Feature — return null ถ้าข้อมูล JSON เสียหาย (ไม่ทำให้ list ทั้งหมด fail)
 function toFeature(row: Record<string, unknown>): GeoJSONFeature | null {
   try {
-    const coordinates = JSON.parse(row.coordinates as string) as [number, number]
+    const coordinates = JSON.parse(row.coordinates as string)
+    const geometryType = row.geometry_type as 'Point' | 'LineString' | 'Polygon'
     const extraProps = row.properties
       ? (JSON.parse(row.properties as string) as Record<string, unknown>)
       : {}
     return {
       id: row.id as string,
       type: 'Feature',
-      geometry: { type: 'Point', coordinates },
+      geometry: { type: geometryType, coordinates } as GeoJSONFeature['geometry'],
       properties: { name: row.name as string, category: (row.category as string | undefined) ?? 'ทั่วไป', ...extraProps },
     }
   } catch (err) {

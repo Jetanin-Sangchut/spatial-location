@@ -15,7 +15,11 @@ interface MapViewProps {
 }
 
 const SOURCE_ID = 'features'
-const LAYER_ID = 'features-circles'
+const LAYER_ID        = 'features-circles'
+const LAYER_LINES     = 'features-lines'
+const LAYER_FILL      = 'features-fill'
+const LAYER_OUTLINE   = 'features-outline'
+const ALL_LAYERS      = [LAYER_ID, LAYER_LINES, LAYER_FILL, LAYER_OUTLINE]
 
 /**
  * @description MapLibre GL JS map — GeoJSON markers, popup on click, empty-click handler
@@ -71,56 +75,92 @@ export default function MapView({ features, onMapClick, flyToRef }: MapViewProps
         },
       })
 
-      // hover: เปลี่ยน cursor + ขยาย circle-radius
+      // LineString layer
+      map.addLayer({
+        id: LAYER_LINES,
+        type: 'line',
+        source: SOURCE_ID,
+        filter: ['==', ['geometry-type'], 'LineString'],
+        paint: { 'line-color': '#00D4C8', 'line-width': 2.5, 'line-opacity': 0.9 },
+      })
+
+      // Polygon fill + outline layers
+      map.addLayer({
+        id: LAYER_FILL,
+        type: 'fill',
+        source: SOURCE_ID,
+        filter: ['==', ['geometry-type'], 'Polygon'],
+        paint: { 'fill-color': '#00D4C8', 'fill-opacity': 0.25 },
+      })
+      map.addLayer({
+        id: LAYER_OUTLINE,
+        type: 'line',
+        source: SOURCE_ID,
+        filter: ['==', ['geometry-type'], 'Polygon'],
+        paint: { 'line-color': '#00D4C8', 'line-width': 1.5 },
+      })
+
+      // helper สร้าง popup HTML จากชื่อและ coordinates
+      const makePopupHtml = (name: string, lngLat: maplibregl.LngLat) =>
+        `<div style="font-family:'Instrument Sans',sans-serif;font-size:13px;color:#E6EDF3;background:#161B22;padding:6px 10px;border-radius:6px;border:1px solid rgba(0,212,200,0.3)">
+          <strong>${name}</strong><br/>
+          <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B949E">
+            ${lngLat.lng.toFixed(5)}, ${lngLat.lat.toFixed(5)}
+          </span>
+        </div>`
+
+      // hover cursor — Point
       map.on('mouseenter', LAYER_ID, () => {
         map.getCanvas().style.cursor = 'pointer'
-        map.setPaintProperty(LAYER_ID, 'circle-radius', [
-          'interpolate',
-          ['linear'],
-          ['zoom'],
-          3,
-          6.5,
-          10,
-          10.4,
-        ])
+        map.setPaintProperty(LAYER_ID, 'circle-radius', ['interpolate', ['linear'], ['zoom'], 3, 6.5, 10, 10.4])
       })
       map.on('mouseleave', LAYER_ID, () => {
         map.getCanvas().style.cursor = ''
-        map.setPaintProperty(LAYER_ID, 'circle-radius', [
-          'interpolate',
-          ['linear'],
-          ['zoom'],
-          3,
-          5,
-          10,
-          8,
-        ])
+        map.setPaintProperty(LAYER_ID, 'circle-radius', ['interpolate', ['linear'], ['zoom'], 3, 5, 10, 8])
       })
 
-      // click บน marker → popup
+      // hover cursor — LineString + Polygon
+      for (const layer of [LAYER_LINES, LAYER_FILL]) {
+        map.on('mouseenter', layer, () => { map.getCanvas().style.cursor = 'pointer' })
+        map.on('mouseleave', layer, () => { map.getCanvas().style.cursor = '' })
+      }
+
+      // click บน marker (Point) → popup
       map.on('click', LAYER_ID, e => {
         if (!e.features?.length) return
-        const f = e.features[0]
-        const coords = (f.geometry as { type: 'Point'; coordinates: [number, number] }).coordinates
-        const name = escapeHtml((f.properties as { name?: string }).name ?? 'ไม่มีชื่อ')
-
+        const name = escapeHtml((e.features[0].properties as { name?: string }).name ?? 'ไม่มีชื่อ')
         popupRef.current?.remove()
         popupRef.current = new maplibregl.Popup({ offset: 12 })
-          .setLngLat(coords)
-          .setHTML(
-            `<div style="font-family:'Instrument Sans',sans-serif;font-size:13px;color:#E6EDF3;background:#161B22;padding:6px 10px;border-radius:6px;border:1px solid rgba(0,212,200,0.3)">
-              <strong>${name}</strong><br/>
-              <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:#8B949E">
-                ${coords[0].toFixed(5)}, ${coords[1].toFixed(5)}
-              </span>
-            </div>`,
-          )
+          .setLngLat(e.lngLat)
+          .setHTML(makePopupHtml(name, e.lngLat))
+          .addTo(map)
+      })
+
+      // click บน LineString → popup ณ จุดที่คลิก
+      map.on('click', LAYER_LINES, e => {
+        if (!e.features?.length) return
+        const name = escapeHtml((e.features[0].properties as { name?: string }).name ?? 'ไม่มีชื่อ')
+        popupRef.current?.remove()
+        popupRef.current = new maplibregl.Popup({ offset: 6 })
+          .setLngLat(e.lngLat)
+          .setHTML(makePopupHtml(name, e.lngLat))
+          .addTo(map)
+      })
+
+      // click บน Polygon fill → popup ณ จุดที่คลิก
+      map.on('click', LAYER_FILL, e => {
+        if (!e.features?.length) return
+        const name = escapeHtml((e.features[0].properties as { name?: string }).name ?? 'ไม่มีชื่อ')
+        popupRef.current?.remove()
+        popupRef.current = new maplibregl.Popup({ offset: 6 })
+          .setLngLat(e.lngLat)
+          .setHTML(makePopupHtml(name, e.lngLat))
           .addTo(map)
       })
 
       // click บน map ว่าง → เปิด AddDialog (ใช้ ref เพื่อ callback ล่าสุดเสมอ)
       map.on('click', e => {
-        const hits = map.queryRenderedFeatures(e.point, { layers: [LAYER_ID] })
+        const hits = map.queryRenderedFeatures(e.point, { layers: ALL_LAYERS })
         if (hits.length === 0) {
           onMapClickRef.current([e.lngLat.lng, e.lngLat.lat])
         }
