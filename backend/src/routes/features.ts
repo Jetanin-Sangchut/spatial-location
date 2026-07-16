@@ -130,27 +130,30 @@ const updateBodySchema: AnySchema = {
 
 const postExamples = {
   Point: {
-    summary: 'Point — วัดพระแก้ว',
+    summary: 'Point — วัดพระแก้ว ABC',
     value: {
-      geometry: { type: 'Point', coordinates: [100.4913, 13.75] },
-      properties: { name: 'วัดพระแก้ว', category: 'วัด' },
+      geometry: { type: 'Point', coordinates: [100.4913, 13.7500] },
+      properties: { name: 'วัดพระแก้ว ABC', category: 'วัด' },
     },
   },
   LineString: {
-    summary: 'LineString — ถนนสีลม',
+    summary: 'LineString — ถนนสาธรใต้',
     value: {
-      geometry: { type: 'LineString', coordinates: [[100.522, 13.721], [100.528, 13.724], [100.534, 13.726]] },
-      properties: { name: 'ถนนสีลม', category: 'ทั่วไป' },
+      geometry: {
+        type: 'LineString',
+        coordinates: [[100.5220, 13.7218], [100.5285, 13.7241], [100.5340, 13.7260]],
+      },
+      properties: { name: 'ถนนสาธรใต้', category: 'ทั่วไป' },
     },
   },
   Polygon: {
-    summary: 'Polygon — สวนลุมพินี',
+    summary: 'Polygon — สวนเบญจกิติ',
     value: {
       geometry: {
         type: 'Polygon',
-        coordinates: [[[100.54, 13.729], [100.545, 13.729], [100.545, 13.733], [100.54, 13.733], [100.54, 13.729]]],
+        coordinates: [[[100.5404, 13.7290], [100.5454, 13.7290], [100.5454, 13.7330], [100.5404, 13.7330], [100.5404, 13.7290]]],
       },
-      properties: { name: 'สวนลุมพินี', category: 'อุทยาน' },
+      properties: { name: 'สวนเบญจกิติ', category: 'อุทยาน' },
     },
   },
 }
@@ -311,17 +314,17 @@ export const featuresRoutes = new Elysia({ prefix: '/api/features' })
           'application/json': {
             schema: updateBodySchema,
             examples: {
-              'Update name only': {
-                summary: 'Rename',
+              'Full update': {
+                summary: 'Update geometry + name + category (matches Postman)',
+                value: { geometry: { type: 'Point', coordinates: [100.5, 13.7] }, properties: { name: 'ชื่อใหม่', category: 'ทั่วไป' } },
+              },
+              'Name only': {
+                summary: 'Rename only',
                 value: { properties: { name: 'ชื่อใหม่' } },
               },
-              'Update category': {
-                summary: 'Change category',
-                value: { properties: { name: 'วัดอรุณ', category: 'วัด' } },
-              },
-              'Move point': {
-                summary: 'Update coordinates',
-                value: { geometry: { type: 'Point', coordinates: [100.5, 13.7] }, properties: { name: 'ชื่อใหม่', category: 'ทั่วไป' } },
+              'Category only': {
+                summary: 'Change category only',
+                value: { properties: { category: 'วัด' } },
               },
             },
           },
