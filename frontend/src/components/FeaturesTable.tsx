@@ -43,6 +43,7 @@ export default function FeaturesTable({ features, onEdit, onDelete, onFlyTo }: F
       features.map(f => ({
         id: f.id,
         name: f.properties.name ?? 'ไม่มีชื่อ',
+        category: f.properties.category ?? 'ทั่วไป',
         lon: f.geometry.coordinates[0].toFixed(6),
         lat: f.geometry.coordinates[1].toFixed(6),
         _feature: f,
@@ -56,6 +57,11 @@ export default function FeaturesTable({ features, onEdit, onDelete, onFlyTo }: F
       headerName: 'ชื่อ',
       flex: 1,
       minWidth: 100,
+    },
+    {
+      field: 'category',
+      headerName: 'ประเภท',
+      width: 110,
     },
     {
       field: 'lon',

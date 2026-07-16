@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef } from 'react'
-import { Box, Button, Grid2, Alert, Typography } from '@mui/material'
+import { Box, Button, Grid2, Alert, MenuItem, Select, Typography } from '@mui/material'
 import { Add as AddIcon } from '@mui/icons-material'
 import Swal from 'sweetalert2'
 import SearchBar from './SearchBar'
@@ -9,6 +9,8 @@ import AddFeatureDialog from './AddFeatureDialog'
 import EditFeatureDialog from './EditFeatureDialog'
 import { useFeatures, useDeleteFeature } from '../hooks/useFeatures'
 import type { GeoJSONFeature } from '../types/geojson'
+
+const CATEGORIES = ['มหาวิทยาลัย', 'วัด', 'สนามบิน', 'อุทยาน', 'หาด', 'ตลาด', 'ทั่วไป']
 
 /** SweetAlert2 instance ที่ตั้งค่าสี button */
 const MySwal = Swal.mixin({
@@ -29,6 +31,7 @@ export default function DashboardLayout() {
 
   const flyToRef = useRef<((coords: [number, number]) => void) | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('')
   const [addOpen, setAddOpen] = useState(false)
   const [clickCoords, setClickCoords] = useState<[number, number] | null>(null)
   const [editFeature, setEditFeature] = useState<GeoJSONFeature | null>(null)
@@ -36,15 +39,17 @@ export default function DashboardLayout() {
   // filter features ด้วย searchQuery (client-side)
   const filteredFeatures = useMemo(() => {
     const all = data?.features ?? []
-    if (!searchQuery.trim()) return all
+    if (!searchQuery.trim() && !selectedCategory) return all
     const q = searchQuery.toLowerCase()
     return all.filter(f => {
       const name = (f.properties.name ?? '').toLowerCase()
       const lon = f.geometry.coordinates[0].toFixed(6)
       const lat = f.geometry.coordinates[1].toFixed(6)
-      return name.includes(q) || lon.includes(q) || lat.includes(q)
+      const matchesSearch = !q || name.includes(q) || lon.includes(q) || lat.includes(q)
+      const matchesCategory = !selectedCategory || (f.properties.category ?? 'ทั่วไป') === selectedCategory
+      return matchesSearch && matchesCategory
     })
-  }, [data, searchQuery])
+  }, [data, searchQuery, selectedCategory])
 
   const handleMapClick = (coords: [number, number]) => {
     // blur canvas ก่อนเปิด dialog เพื่อหลีกเลี่ยง aria-hidden warning จาก MUI Dialog
@@ -102,8 +107,30 @@ export default function DashboardLayout() {
           </Box>
 
           {/* Search */}
-          <Box sx={{ px: 2, py: 1.5 }}>
+          <Box sx={{ px: 2, pt: 1.5, pb: 1 }}>
             <SearchBar value={searchQuery} onChange={setSearchQuery} />
+          </Box>
+
+          {/* Category filter */}
+          <Box sx={{ px: 2, pb: 1 }}>
+            <Select
+              value={selectedCategory}
+              onChange={e => setSelectedCategory(e.target.value)}
+              size="small"
+              fullWidth
+              displayEmpty
+              sx={{
+                color: 'text.primary',
+                fontSize: 13,
+                fontFamily: 'Instrument Sans, sans-serif',
+                '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.15)' },
+                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.3)' },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#00D4C8' },
+              }}
+            >
+              <MenuItem value="">ทุกประเภท</MenuItem>
+              {CATEGORIES.map(c => <MenuItem key={c} value={c} sx={{ fontSize: 13 }}>{c}</MenuItem>)}
+            </Select>
           </Box>
 
           {/* DataGrid — flex:1 + minHeight:0 keeps scroll inside the 50vh/100% container */}

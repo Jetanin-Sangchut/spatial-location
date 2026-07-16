@@ -8,6 +8,7 @@ export interface GeoJSONFeature {
   }
   properties: {
     name: string
+    category?: string
     [key: string]: unknown
   }
 }

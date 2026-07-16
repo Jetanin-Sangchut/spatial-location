@@ -5,6 +5,8 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  MenuItem,
+  Select,
   Stack,
   TextField,
 } from '@mui/material'
@@ -28,7 +30,10 @@ export default function EditFeatureDialog({
   onSuccess,
   onError,
 }: EditFeatureDialogProps) {
+  const CATEGORIES = ['มหาวิทยาลัย', 'วัด', 'สนามบิน', 'อุทยาน', 'หาด', 'ตลาด', 'ทั่วไป']
+
   const [name, setName] = useState('')
+  const [category, setCategory] = useState('ทั่วไป')
   const [lon, setLon] = useState('')
   const [lat, setLat] = useState('')
 
@@ -39,10 +44,12 @@ export default function EditFeatureDialog({
   useEffect(() => {
     if (feature) {
       setName(feature.properties.name)
+      setCategory(feature.properties.category ?? 'ทั่วไป')
       setLon(feature.geometry.coordinates[0].toFixed(6))
       setLat(feature.geometry.coordinates[1].toFixed(6))
     } else {
       setName('')
+      setCategory('ทั่วไป')
       setLon('')
       setLat('')
     }
@@ -60,7 +67,7 @@ export default function EditFeatureDialog({
         id: feature.id,
         body: {
           geometry: { type: 'Point', coordinates: [lonNum, latNum] },
-          properties: { name: name.trim() },
+          properties: { name: name.trim(), category },
         },
       },
       {
@@ -92,10 +99,26 @@ export default function EditFeatureDialog({
             onChange={e => setName(e.target.value)}
             required
             fullWidth
-            size="small"
+            size="medium"
             autoFocus
             sx={fieldSx}
           />
+          <Select
+            value={category}
+            onChange={e => setCategory(e.target.value)}
+            size="medium"
+            fullWidth
+            sx={{
+              fontSize: 13,
+              fontFamily: 'Instrument Sans, sans-serif',
+              color: 'text.primary',
+              '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.15)' },
+              '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.3)' },
+              '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#00D4C8' },
+            }}
+          >
+            {CATEGORIES.map(c => <MenuItem key={c} value={c} sx={{ fontSize: 13 }}>{c}</MenuItem>)}
+          </Select>
           <Stack direction="row" spacing={1}>
             <TextField
               label="Longitude"
