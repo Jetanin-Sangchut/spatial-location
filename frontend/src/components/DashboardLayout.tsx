@@ -32,6 +32,7 @@ export default function DashboardLayout() {
   const flyToRef = useRef<((coords: [number, number]) => void) | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('')
+  const [selectedGeometry, setSelectedGeometry] = useState('')
   const [addOpen, setAddOpen] = useState(false)
   const [clickCoords, setClickCoords] = useState<[number, number] | null>(null)
   const [editFeature, setEditFeature] = useState<GeoJSONFeature | null>(null)
@@ -39,7 +40,7 @@ export default function DashboardLayout() {
   // filter features ด้วย searchQuery (client-side)
   const filteredFeatures = useMemo(() => {
     const all = data?.features ?? []
-    if (!searchQuery.trim() && !selectedCategory) return all
+    if (!searchQuery.trim() && !selectedCategory && !selectedGeometry) return all
     const q = searchQuery.toLowerCase()
     return all.filter(f => {
       const name = (f.properties.name ?? '').toLowerCase()
@@ -47,9 +48,10 @@ export default function DashboardLayout() {
       const lat = f.geometry.type === 'Point' ? f.geometry.coordinates[1].toFixed(6) : ''
       const matchesSearch = !q || name.includes(q) || lon.includes(q) || lat.includes(q)
       const matchesCategory = !selectedCategory || (f.properties.category ?? 'ทั่วไป') === selectedCategory
-      return matchesSearch && matchesCategory
+      const matchesGeometry = !selectedGeometry || f.geometry.type === selectedGeometry
+      return matchesSearch && matchesCategory && matchesGeometry
     })
-  }, [data, searchQuery, selectedCategory])
+  }, [data, searchQuery, selectedCategory, selectedGeometry])
 
   const handleMapClick = (coords: [number, number]) => {
     // blur canvas ก่อนเปิด dialog เพื่อหลีกเลี่ยง aria-hidden warning จาก MUI Dialog
@@ -130,6 +132,30 @@ export default function DashboardLayout() {
             >
               <MenuItem value="">ทุกประเภท</MenuItem>
               {CATEGORIES.map(c => <MenuItem key={c} value={c} sx={{ fontSize: 13 }}>{c}</MenuItem>)}
+            </Select>
+          </Box>
+
+          {/* Geometry type filter */}
+          <Box sx={{ px: 2, pb: 1 }}>
+            <Select
+              value={selectedGeometry}
+              onChange={e => setSelectedGeometry(e.target.value)}
+              size="small"
+              fullWidth
+              displayEmpty
+              sx={{
+                color: 'text.primary',
+                fontSize: 13,
+                fontFamily: 'Instrument Sans, sans-serif',
+                '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.15)' },
+                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.3)' },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: '#00D4C8' },
+              }}
+            >
+              <MenuItem value="">ทุก Geometry</MenuItem>
+              {['Point', 'LineString', 'Polygon'].map(g => (
+                <MenuItem key={g} value={g} sx={{ fontSize: 13, fontFamily: 'JetBrains Mono, monospace' }}>{g}</MenuItem>
+              ))}
             </Select>
           </Box>
 
